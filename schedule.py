@@ -33,8 +33,10 @@ class Schedule(object):
         total_time = 0
 
         for task in self.tasks:
-            todo.append(task)
+            
             total_time += task.time
+            todo.append(task)
+
             if total_time >= self.hours:
                 break
 
