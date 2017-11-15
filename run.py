@@ -32,7 +32,7 @@ def format_schedule(sch):
     """
     Given a Schedule object will format schedule nicely.
     """
-    msg = ["\nDATE: {}\n\nTO DO:".format(date.today())]
+    msg = ["\nDATE: {}\n\n\nTO DO:".format(date.today())]
     tasks = sch.get_scheduled_tasks()
     for i, task in enumerate(tasks):
         task_msg = ("{num}. {desc} \n\t- est. time: {time} hours " + 
@@ -45,13 +45,41 @@ def format_schedule(sch):
         msg.append(task_msg)
     return "\n\n".join(msg)
 
+def format_hours_per_day(sch):
+    """
+    Given a Schedule object will print out how many hours are associated
+    with each day in the future
+    """
+    msg = ["\n\nWORK DUE IN UPCOMING DAYS:"]
+    dates = sorted(sch.get_tasks_per_day().items(), key=lambda tup: tup[0])
+    for date, date_dct in dates:
+        date_msg = [
+            "* {date} - {hrs} HOURS".format(
+                date=date.strftime("%a %b %d"),
+                hrs=date_dct["hours"])
+        ]
+        date_tasks = sorted(date_dct["tasks"], 
+            key=lambda task: task.weight_per_hr, 
+            reverse=True)
+        for task in date_tasks:
+            date_msg.append(
+                "\t- ({time} hrs) {desc} - ${wgt}/hr".format(
+                    desc=task.description,
+                    time=task.time,
+                    wgt=round(task.weight_per_hr, 2))
+            )
+        msg.append("\n".join(date_msg))
+    return "\n\n".join(msg)
+
 def run():
+    ws = client.open_by_url(usr.SHEETURL).worksheet(usr.SHEETNAME)
+
     today_hours = float(raw_input(
         "How much time do you have today? (in hours) ").strip())
 
-    ws = client.open_by_url(usr.SHEETURL).worksheet(usr.SHEETNAME)
     today_schedule = Schedule(today_hours, tasks=get_tasks(ws))
     print(format_schedule(today_schedule))
+    print(format_hours_per_day(today_schedule))
 
 if __name__ == "__main__":
     run()
