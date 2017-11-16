@@ -5,6 +5,7 @@ what order
 AUTHOR: Angelina Li
 DATE: 10/30/17
 """
+from datetime import date
 
 from task import Task
 
@@ -66,3 +67,41 @@ class Schedule(object):
                 break
 
         return todo
+
+    def format_schedule(self):
+        msg = ["\nDATE: {}\n\n\nTO DO:".format(date.today())]
+        tasks = self.get_scheduled_tasks()
+        for i, task in enumerate(tasks):
+            task_msg = ("{num}. {desc} \n\t- est. time: {time} hours " + 
+                "\n\t- bang 4 buck: ${wgt}/hr\n\t- due: {due}").format(
+                num=i + 1,
+                desc=task.description,
+                wgt=round(task.weight_per_hr, 2),
+                time=task.time,
+                due=task.due.strftime("%a %b %d"))
+            msg.append(task_msg)
+        return "\n\n".join(msg)
+
+    def format_future_todos(self):
+        msg = ["\n\nWORK DUE IN UPCOMING DAYS:"]
+        dates = sorted(self.get_tasks_per_day().items(), key=lambda tup: tup[0])
+        for date, date_dct in dates:
+            date_msg = [
+                "* {date} - {hrs} HOURS".format(
+                    date=date.strftime("%a %b %d"),
+                    hrs=date_dct["hours"])
+            ]
+            
+            date_tasks = sorted(date_dct["tasks"], 
+                key=lambda task: task.weight_per_hr, 
+                reverse=True)
+            
+            for task in date_tasks:
+                date_msg.append(
+                    "\t* ({time} hrs) {desc} - ${wgt}/hr".format(
+                        desc=task.description,
+                        time=task.time,
+                        wgt=round(task.weight_per_hr, 2))
+                )
+            msg.append("\n".join(date_msg))
+        return "\n\n".join(msg)
