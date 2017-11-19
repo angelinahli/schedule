@@ -4,7 +4,7 @@ DESCR: Represents a Task that should be completed and its properties
 AUTHOR: Angelina Li
 DATE: 10/30/2017
 """
-from datetime import datetime, date
+from datetime import datetime
 
 class Task(object):
     """
@@ -28,27 +28,33 @@ class Task(object):
         self.due = datetime.strptime(due, "%Y-%m-%d")
 
         self.weight_per_hr = self.weight / self.time
-        self.due_by_tomorrow = self._is_due_by_tomorrow()
+        self.urgency = self._get_urgency()
 
-    def _convert_vals(self, fn, val, default):
-        try:
-            return fn(val)
-        except ValueError:
-            return default
+        self.quad = None
 
-    def _is_due_by_tomorrow(self):
-        """returns whether the task is due by tomorrow or overdue.
+    def _get_urgency(self):
         """
-        today = datetime.today()
-        due_soon = (today > self.due) or (self.due - today).days < 1.75
-        return 1 if due_soon else 0
+        Returns the normalized difference in the number of days between today
+        and the event due day. (Tasks due sooner have a higher urgency)
+        
+        Normalized difference: number of days between today and the due date
+        + 3, such that tasks due tomorrow have a normalized difference of 1.
+        """
+        today = datetime.today().date()
+        due_date = self.due.date()
+        diff = (today - due_date).days
+
+        return diff + 3
 
     def __repr__(self):
-        return ("\nTask: {desc} \n\ttime: {time} \n\tweight: {wgt} \n\tdue: {due} " + 
-            "\n\twgt_p_hr: {wph} \n\tdue_by_tmrw: {dbt}").format(
-            desc=self.description,
-            time=self.time,
-            wgt=self.weight,
-            due=self.due,
-            wph=self.weight_per_hr,
-            dbt=self.due_by_tomorrow)
+        return ("\nTask: {desc} \n\ttime: {time} \n\tweight: {wgt} " + 
+            "\n\tdue: {due} \n\twgt_p_hr: {wph} \n\turgency: {urg} " +
+            "\n\tquadrant: {quad}").format(
+                desc=self.description,
+                time=self.time,
+                wgt=self.weight,
+                due=self.due,
+                wph=self.weight_per_hr,
+                urg=self.urgency,
+                quad=self.quad
+                )

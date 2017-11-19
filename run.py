@@ -1,4 +1,3 @@
-
 import config.user_info as usr
 from config.gsheets import client
 from schedule import Schedule
@@ -27,15 +26,36 @@ def get_tasks(ws):
 
     return tasks
 
+def get_valid_hours():
+    try:
+        return float(raw_input(
+            "How much time do you have today (in hours)? ").strip())
+    except ValueError:
+        print("Sorry, this input is invalid - please try again.\n")
+        return get_valid_hours()
+
+def get_valid_mode():
+    try:
+        mode = int(raw_input(
+                "Do you want any tasks (1), short tasks (2) or long tasks (3)? "
+            ).strip())
+        
+        if mode not in range(1, 4):
+            print("Please enter a number between 1 and 3.\n")
+            return get_valid_mode()
+
+        return mode
+    except ValueError:
+        print("Sorry, this input is invalid - please try again.\n")
+        return get_valid_mode()
+
 def run():
     ws = client.open_by_url(usr.SHEETURL).worksheet(usr.SHEETNAME)
+    hours = get_valid_hours()
+    mode = get_valid_mode()
 
-    today_hours = float(raw_input(
-        "How much time do you have today? (in hours) ").strip())
-
-    today_schedule = Schedule(today_hours, tasks=get_tasks(ws))
-    print(today_schedule.format_schedule())
-    print(today_schedule.format_future_todos())
+    today_schedule = Schedule(hours=hours, mode=mode, tasks=get_tasks(ws))
+    today_schedule.print_all()
 
 if __name__ == "__main__":
     run()
