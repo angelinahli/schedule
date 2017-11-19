@@ -105,7 +105,7 @@ class Schedule(object):
         tasks = self.get_scheduled_tasks(quadrants)
         for i, task in enumerate(tasks):
             task_msg = ("\n{num}. {desc} \n\t- est. time: {time} hours "
-                    + "\n\t- bang 4 buck: ${wgt}/hr\n\t-quadrant: {quad}"
+                    + "\n\t- bang 4 buck: ${wgt}/hr\n\t- quadrant: {quad}"
                     + "\n\t- due: {due}").format(
                 num=i + 1,
                 desc=task.description,
