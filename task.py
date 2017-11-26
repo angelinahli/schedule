@@ -19,8 +19,9 @@ class Task(object):
     """
 
     def __init__(self, description, time, weight, due):
-        """Return a Task object with the attributes as described above.
-            due will be represented as a string.
+        """
+        Return a Task object with the attributes as described above.
+        due will be represented as a string.
         """
         self.description = description
         self.time = float(time)
@@ -46,6 +47,16 @@ class Task(object):
 
         return diff + 3
 
+    def get_msg(self):
+        return ("{desc} \n\t- est. time: {time} hours "
+                + "\n\t- bang 4 buck: ${wgt}/hr\n\t- quadrant: {quad}"
+                + "\n\t- due: {due}").format(
+            desc=self.description,
+            wgt=round(self.weight_per_hr, 2),
+            quad=self.quad,
+            time=self.time,
+            due=self.due.strftime("%a %b %d"))
+
     def __repr__(self):
         return ("\nTask: {desc} \n\ttime: {time} \n\tweight: {wgt} " + 
             "\n\tdue: {due} \n\twgt_p_hr: {wph} \n\turgency: {urg} " +
@@ -56,5 +67,4 @@ class Task(object):
                 due=self.due,
                 wph=self.weight_per_hr,
                 urg=self.urgency,
-                quad=self.quad
-                )
+                quad=self.quad)

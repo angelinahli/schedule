@@ -22,6 +22,28 @@ class Schedule(object):
         self.mode = mode
         self.tasks = tasks
 
+    def _get_tasks_per_day(self):
+        """
+        Will return a dictionary mapping each date onto the total hours of
+        work due on that date, as well as a list of all the tasks due
+        on that date.
+
+        return_dct = {
+            datetime: {
+                "hours": num_hours, 
+                "tasks": [list of Task() objs due on this date]
+            }
+        }
+        """
+        dates = {}
+        for task in self.tasks:
+            date_dct = dates.get(task.due, {"hours": 0, "tasks": []})
+            
+            date_dct["hours"] += task.time
+            date_dct["tasks"].append(task)
+            dates[task.due] = date_dct
+        return dates
+
     def _get_quadrants(self):
         """
         Implements the Eisenhower matrix:
@@ -52,83 +74,45 @@ class Schedule(object):
 
         return quadrants
 
-    def get_tasks_per_day(self):
-        """
-        Will return a dictionary mapping each date onto the total hours of
-        work due on that date, as well as a list of all the tasks due
-        on that date.
-
-        return_dct = {
-            datetime: {
-                "hours": num_hours, 
-                "tasks": [list of Task() objs due on this date]
-            }
-        }
-        """
-        dates = {}
-        for task in self.tasks:
-            date_dct = dates.get(task.due, {"hours": 0, "tasks": []})
-            
-            date_dct["hours"] += task.time
-            date_dct["tasks"].append(task)
-            dates[task.due] = date_dct
-        return dates
-
-    def get_scheduled_tasks(self, quadrants):
+    def _format_todos(self):
         """
         Mode can either be:
         - 1 (do in order of Eisenhower matrix)
         - 2 (select short (<=45 min) tasks in order of Eisenhower matrix)
         - 3 (select long tasks in order of Eisenhower matrix)
         """
-        todo = []
+        quadrants = self._get_quadrants() # returns a dictionary
+        tasks = []
         total_time = 0
-        ordered_tasks = quadrants[1] + quadrants[2]
+        msg = ["\n\nTO DO:"]
 
-        for task in ordered_tasks:
-            short = task.time <= 0.75
+        for i, task in enumerate(quadrants[1] + quadrants[2]):
+            short = task.time < 1
 
-            if self.mode == 1 or (self.mode == 2 and short) or (self.mode == 3 
+            if self.mode == 1 or (self.mode == 2 and short) or (self.mode == 3
                     and not short):
                 total_time += task.time
-                todo.append(task)
+                tasks.append(task)
+                msg.append("\n{}. ".format(i + 1) + task.get_msg())
 
             if total_time >= self.hours:
                 break
 
-        return todo
-
-    def _format_todos(self):
-        quadrants = self._get_quadrants()
-
-        msg = ["\n\nTO DO:"]
-        tasks = self.get_scheduled_tasks(quadrants)
-        for i, task in enumerate(tasks):
-            task_msg = ("\n{num}. {desc} \n\t- est. time: {time} hours "
-                    + "\n\t- bang 4 buck: ${wgt}/hr\n\t- quadrant: {quad}"
-                    + "\n\t- due: {due}").format(
-                num=i + 1,
-                desc=task.description,
-                wgt=round(task.weight_per_hr, 2),
-                quad=task.quad,
-                time=task.time,
-                due=task.due.strftime("%a %b %d"))
-            msg.append(task_msg)
-
-        q34_tasks = quadrants[3] + quadrants[4]
-        if q34_tasks:
+        other_tasks = quadrants[3] + quadrants[4]
+        if other_tasks:
             msg.append(("\n{}. Delegate or delete the following unimportant " + 
                 "tasks: ").format(len(tasks) + 1))
-            for task in q34_tasks:
-                task_msg = "\t- {desc} (quadrant {quad})".format(
+            for task in other_tasks:
+                short_msg = "\t- {desc} (quadrant {quad})".format(
                     desc=task.description,
                     quad=task.quad)
-                msg.append(task_msg)
+                msg.append(short_msg)
+
         return "\n".join(msg)
 
     def _format_future_todos(self):
         msg = ["\n\nWORK DUE IN UPCOMING DAYS:"]
-        dates = sorted(self.get_tasks_per_day().items(), key=lambda tup: tup[0])
+        dates = sorted(self._get_tasks_per_day().items(), key=lambda tup: tup[0])
         
         for date, date_dct in dates:
             date_msg = [
